@@ -10,6 +10,7 @@ import rx.Observable;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class MainActivityTest {
@@ -27,12 +28,12 @@ public class MainActivityTest {
     }
 
     @Test
-    public void testGetRepositoriesIsCalledInOnCreate() throws Exception {
+    public void testGetRepositoriesIsNeverCalledInOnCreate() throws Exception {
         when(mockRepositoryInteractor.getRepositories()).thenReturn(Observable.<List<Repository>>empty());
 
         mainActivity.onCreate(null);
 
-        verify(mockRepositoryInteractor).getRepositories();
+        verify(mockRepositoryInteractor, never()).getRepositories();
     }
 
     @Test
@@ -54,6 +55,38 @@ public class MainActivityTest {
         Thread.sleep(2000);
 
         verify(mockRepositoryInteractor).getRepositories();
-        Truth.assertThat(listAdapter.getCount()).isEqualTo(2);
+
+
+        Truth.assertThat(listAdapter.getCount()).isEqualTo(0);
+    }
+
+    @Test
+    public void testApiInteractorIsCalledIfConnection() throws Exception {
+        ConnectivityManager manager = mock(ConnectivityManager.class);
+        when(manager.hasConnection()).thenReturn(true);
+        when(mockRepositoryInteractor.getRepositories(anyString()))
+                .thenReturn(Observable.<List<Repository>>empty());
+
+        mainActivity.connectivityManager = manager;
+
+        assertNotNull(mainActivity.interactor);
+        mainActivity.findRepos("test");
+
+        verify(mockRepositoryInteractor).getRepositories(anyString());
+    }
+
+    @Test
+    public void testApiInteractorIsNOtCalledWithoutAConnection() throws Exception {
+        ConnectivityManager manager = mock(ConnectivityManager.class);
+        when(manager.hasConnection()).thenReturn(false);
+        when(mockRepositoryInteractor.getRepositories(anyString()))
+                .thenReturn(Observable.<List<Repository>>empty());
+
+        mainActivity.connectivityManager = manager;
+
+        assertNotNull(mainActivity.interactor);
+        mainActivity.findRepos("test");
+
+        verify(mockRepositoryInteractor, never()).getRepositories(anyString());
     }
 }

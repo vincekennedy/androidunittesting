@@ -36,4 +36,10 @@ public class RepositoryInteractorTest {
         Mockito.verify(gitHubApi).repositories("swanson");
     }
 
+    @Test
+    public void testGetRepositoriesUsesSpecifiedUser() throws Exception {
+        repositoryInteractor.getRepositories("vincekennedy");
+
+        Mockito.verify(gitHubApi).repositories("vincekennedy");
+    }
 }
